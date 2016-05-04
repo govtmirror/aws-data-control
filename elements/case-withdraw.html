@@ -38,6 +38,10 @@ Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
       color: white;
       margin:10px;
     }
+    #withdrawDate {
+      width:300px;
+      background-color: white;
+    }
     
   </style>
 
@@ -50,9 +54,11 @@ Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
         <div class="nmbpanel">
           <h3>Case:  <span>{{selectedCaseId}}</span></h3>
           
+          
 
 
           <div class="nmbpanel">
+            <paper-input type="date" id="withdrawDate" label="date:"></paper-input>
             <h3>Comment:</h3>
             <textarea id="withdrawComment" rows="5" cols="60"></textarea>
             <br>
@@ -111,7 +117,19 @@ Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
   // utilities
 
   _withdrawIt: function() {
-    this.fire('case-withdraw', {'comment':this.$.withdrawComment.value});
+    if (!this.$.withdrawDate.value) {
+      alert("you must enter a date");
+      return;
+    }
+    var tempDate = new Date(this.$.withdrawDate.value);
+    var tempDateInt = tempDate.getTime() + (12 * 3600 * 1000);
+    var tempDateStr = tempDateInt.toString();
+    this.fire('case-withdraw', {
+      'comment':this.$.withdrawComment.value,
+      'withdrawDate': tempDateStr
+    });
+    this.$.withdrawDate.value = "";
+    this.$.withdrawComment.value = "";
   }
 
   // dateConvert: function (stringint) {

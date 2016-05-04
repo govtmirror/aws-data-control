@@ -107,22 +107,22 @@ Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
         this.$.datafacade.newCase(event.detail);
       });
       this.addEventListener('case-withdraw', function(event) {
-        var yonow = Date.now().toString();
+
         var paramStr = {
           "disposition": "withdrawn",
-          "dateClosed": yonow,
+          "dateClosed": event.detail.withdrawDate,
           "open": null
         };
+        console.log(paramStr);
         this.$.datafacade.updateSelectedArbcase(paramStr);
+
         var commentStr = "Case withdrawn - " + event.detail.comment;
-
-        
-
         var commentParams = {
           "username": this.userName,
           "entry": commentStr,
           "stamp": Date.now().toString()
         }
+
         this.$.datafacade.makeComment(commentParams);
         alert("case withdrawn");
       });

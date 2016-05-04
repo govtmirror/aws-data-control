@@ -1,0 +1,274 @@
+
+<!--
+@license
+Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="case-data">
+
+  <template>
+    <firebase-collection
+        location="{{arbcasePath}}"
+        data="{{arbcases}}">
+    </firebase-collection>
+    <firebase-collection
+        location="{{boardPath}}"
+        data="{{boards}}">
+    </firebase-collection>
+    <firebase-collection
+        location="{{carrierPath}}"
+        data="{{carriers}}">
+    </firebase-collection>
+    <firebase-collection
+        location="{{unionPath}}"
+        data="{{unions}}">
+    </firebase-collection>
+    <firebase-collection
+        location="{{subjectPath}}"
+        data="{{subjects}}">
+    </firebase-collection>
+    <firebase-document
+        location="{{_selectedCaseUrl}}"
+        data="{{selectedCase}}">
+    </firebase-document>
+    <firebase-collection
+        location="{{_logPath}}"
+        data="{{selectedLog}}">
+    </firebase-collection>
+    <firebase-document
+        location="{{_selectedBoardUrl}}"
+        data="{{selectedBoard}}">
+    </firebase-document>
+    <firebase-document
+        location="{{_selectedSubjectUrl}}"
+        data="{{selectedSubject}}">
+    </firebase-document>
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+  is: 'case-data',
+
+  properties: {
+
+    arbcases: {
+      type: Array,
+      notify: true,
+      value: function () {
+        return [];
+      }
+    },
+    carriers: {
+      type: Array,
+      notify: true,
+      value: function () {
+        return [];
+      }
+    },
+    unions: {
+      type: Array,
+      notify: true,
+      // observer: 'arbcasesChange',
+      value: function () {
+        return [];
+      }
+    },
+    boards: {
+      type: Array,
+      notify: true,
+      value: function () {
+        return [];
+      }
+    },
+    subjects: {
+      type: Array,
+      notify: true,
+      value: function () {
+        return [];
+      }
+    },
+    _selectedCaseUrl: {
+      type: String,
+      value: null
+    },
+    _selectedBoardUrl: {
+      type: String,
+      value: null
+    },
+    _selectedSubjectUrl: {
+      type: String,
+      value: null
+    },
+    _logPath: {
+      type: String,
+      value: null
+    },
+    selectedLog: {
+      type: Array,
+      notify: true,
+      value: function () {
+        return [];
+      }
+    },
+
+    selectedCase: {
+      type: Object,
+      notify:true
+    },
+    selectedCaseId: {
+      type: String,
+      notify: true
+    },
+
+    selectedBoard: {
+      type: Object,
+      notify:true
+    },
+    selectedBoardId: {
+      type: String,
+      notify: true
+    },
+
+    selectedSubject: {
+      type: Object,
+      notify:true
+    },
+    selectedSubjectId: {
+      type: String,
+      notify: true
+    },
+
+    fbUrl: String,
+    useruid: String    
+  },
+
+  // Element Lifecycle
+
+  ready: function() {
+    this.boardPath = this.fbUrl + "/boards";
+    this.carrierPath = this.fbUrl + "/carriers";
+    this.unionPath = this.fbUrl + "/unions";
+    this.subjectPath = this.fbUrl + "/subjects";
+    this.arbcasePath = this.fbUrl + "/arbcases";
+  },
+
+  // Element Behavior
+
+  makeComment: function (params) {
+    var subaddress = this._selectedCaseUrl + "/log/" + params.stamp;
+    var saveRef = new Firebase(subaddress);
+    saveRef.set(params);
+  },
+
+  updateSelectedArbcase: function (params) {
+    var reqRef = new Firebase(this._selectedCaseUrl);
+    reqRef.update(params);
+  },
+
+  setSelectedCaseUrl: function (caseId) {
+    this.selectedCaseId = caseId;
+    this._selectedCaseUrl = this.arbcasePath + "/" + caseId;
+    this._logPath = this._selectedCaseUrl + "/log";
+  },
+
+  newCase: function (params) {
+    var theBoardLastUsed = NaN;
+    var boardselection = {};
+    var boardaddress = this.boardPath+ "/" + params.board;
+    var boardRef = new Firebase(boardaddress);
+    boardRef.once("value", function(data) {
+      boardselection = data.val();
+    });
+    var thisCaseNum = Number(boardselection.lastused) + 1;
+    var thisCaseStr = thisCaseNum.toString();
+    var thisCaseStrNoZeros = thisCaseStr
+
+    var caselenTest  = 6 - thisCaseStr.length;
+    if (caselenTest == 5) {thisCaseStr = "00000" + thisCaseStr;}
+    if (caselenTest == 4) {thisCaseStr = "0000" + thisCaseStr;}
+    if (caselenTest == 3) {thisCaseStr = "000" + thisCaseStr;}
+    if (caselenTest == 2) {thisCaseStr = "00" + thisCaseStr;}
+    if (caselenTest == 1) {thisCaseStr = "0" + thisCaseStr;}
+    var boardsplice = params.board.split("-");
+    var boardcode = boardsplice[0];
+    var boardnumber = boardsplice[1];
+    var lenTest  = 5 - boardnumber.length;
+    if (lenTest == 4) {boardnumber = "0000" + boardnumber;}
+    if (lenTest == 3) {boardnumber = "000" + boardnumber;}
+    if (lenTest == 2) {boardnumber = "00" + boardnumber;}
+    if (lenTest == 1) {boardnumber = "0" + boardnumber;}
+    var newCaseNum = boardcode + "-" + boardnumber + "-" + thisCaseStr;
+
+    var caseAddress = this.arbcasePath + "/" + newCaseNum;
+    var newCaseRef = new Firebase(caseAddress);
+    var stopIt = false;
+    newCaseRef.once('value', (function (data) {
+        if (data.val() != null) {
+          alert("next case already exists, something is wrong. contact ICT.  " + caseAddress);
+          stopIt = true;
+          return;
+        };
+      }).bind(this)
+    );
+    if (stopIt) {
+      alert("FAILURE to Create " + caseAddress);
+      return;
+    }
+
+    var unionPick = null;
+    var unionAbbr = null
+    if (boardselection.union) {
+      unionPick = boardselection.union;
+      unionAbbr = boardselection.unionAbbr;
+    }
+    var carrierPick = null;
+    var carrierAbbr = null
+    if (boardselection.carrier) {
+      carrierPick = boardselection.carrier;
+      carrierAbbr = boardselection.carrierAbbr;
+    }
+
+    var yoDueDate = (Number(params.dateOpen) + (75 * 24 * 3600 * 1000)).toString();
+  
+    var paramStr = {
+      "board": params.board,
+      "subject": params.subject,
+      "dateOpened": params.dateOpen,
+      "union": unionPick,
+      "unionAbbr": unionAbbr,
+      "carrier": carrierPick,
+      "carrierAbbr": carrierAbbr,
+      "open": true,
+      "assigned": false,
+      "dueDate": yoDueDate
+    };
+
+    newCaseRef.set(paramStr, (function () {
+      boardRef.update({
+        'lastused' : thisCaseStrNoZeros
+      });
+    }).bind(this));
+    alert("case " + newCaseNum + " created.")
+
+  },
+
+  getSelectedBoard: function (board) {
+    // alert("in getSelectedBoard " + board.__firebaseKey__);
+    this.selectedBoardId = board.__firebaseKey__;
+    this._selectedBoardUrl = this.boardPath + "/" + board.__firebaseKey__;
+  },
+
+  getSelectedSubject: function (subject) {
+    // alert("in getSelectedSubject " + subject.__firebaseKey__);
+    this.selectedSubjectId = subject.__firebaseKey__;
+    this._selectedSubjectUrl = this.subjectPath + "/" + subject.__firebaseKey__;
+  }
+
+
+});
+
+</script>

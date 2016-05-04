@@ -1,0 +1,182 @@
+<!--
+@license
+Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="board-data">
+
+
+<template>
+
+	<firebase-collection
+        location="{{_boardPath}}"
+        order-by-key
+        data="{{boards}}">
+    </firebase-collection>
+    <firebase-document
+        location="{{_selectedBoardUrl}}"
+        data="{{selectedBoard}}">
+    </firebase-document>
+    <firebase-collection
+        location="{{_commentsPath}}"
+        order-by-key
+        data="{{comments}}">
+    </firebase-collection>
+
+    <firebase-collection
+        location="{{_carrierPath}}"
+        order-by-key
+        data="{{carriers}}">
+    </firebase-collection>
+    <firebase-collection
+        location="{{_unionPath}}"
+        order-by-key
+        data="{{unions}}">
+    </firebase-collection>
+
+
+</template>
+
+</dom-module>
+
+<script>
+
+	Polymer({
+		is: 'board-data',
+
+		properties: {
+
+			fireDb: {
+				type: String,
+				value: null
+			},
+
+			_boardPath: String,
+			boards: {
+				type: Array,
+				value: function () {
+					return [];
+				},
+				notify: true
+			},
+
+			_carrierPath: String,
+			carriers: {
+				type: Array,
+				value: function () {
+					return [];
+				},
+				notify: true
+			},
+
+			_unionPath: String,
+			unions: {
+				type: Array,
+				value: function () {
+					return [];
+				},
+				notify: true
+			},
+
+			_commentsPath: String,
+			comments: {
+				type: Array,
+				value: function () {
+					return [];
+				},
+				notify: true
+			},
+
+			selectedBoardid: {
+				type: String,
+				value: null,
+				notify: true
+			},
+			_selectedBoardUrl: {
+				type: String,
+				value: null
+			},
+
+			selectedBoard: {
+				type: Object,
+				notify: true
+			}
+
+		},
+
+		ready: function () {
+			this._boardPath =this.fireDb + "/boards";
+			this._carrierPath =this.fireDb + "/carriers";
+			this._unionPath =this.fireDb + "/unions";
+		},
+
+		setSelectedBoardUrl: function (boardId) {
+			// alert("hi " + boardId);
+			if (this.selectedBoardid != boardId) {
+				this.selectedBoardid = boardId;
+				this._selectedBoardUrl = this._boardPath + "/" + boardId;
+				this._commentsPath = this._selectedBoardUrl + "/comments";
+			} else {
+				this.selectedBoardid = null;
+				this._selectedBoardUrl = this._boardPath + "/A-00000";
+				this._commentsPath = this._selectedBoardUrl;
+			}
+		},
+
+
+		newBoard: function (bdmsg) {
+			var bdurl = this._boardPath + "/" + bdmsg.board;
+			var ref = new Firebase(bdurl);
+			bdmsg.board = null;
+			ref.once("value", function (data) {
+				if (data.val() == null) {
+					ref.set(bdmsg, function () {
+						alert("back from creating new board.");
+					});
+				} else {
+					alert("already have a board by that number.");
+				}
+			});
+		},
+
+		newComment: function (entry) {
+			var tempDate = new Date();
+		    var tempDateInt = tempDate.getTime();
+		    var dateCommentStr = tempDateInt.toString();
+
+		    var bdurl = this._boardPath + "/" + this.selectedBoardid + "/comments/" + dateCommentStr;
+		    var ref = new Firebase(bdurl);
+		    ref.update({'stamp':dateCommentStr, 'entry':entry});
+		},
+
+		closeBoard: function (board) {
+			// alert("in data, close board " + board);
+			var bdurl = this._boardPath + "/" + board;
+
+			var tempDate = new Date();
+		    var tempDateInt = tempDate.getTime();
+		    var dateClosedStr = tempDateInt.toString();
+
+
+			var ref = new Firebase(bdurl);
+
+			ref.update({'closeDate':dateClosedStr});
+		},
+
+		ppToggle: function (eventObject) {
+			var bdurl = this._boardPath + "/" + eventObject.board;
+			var ref = new Firebase(bdurl);
+			var pp = null;
+			if (eventObject.partyPay) {
+				pp = true;
+			}
+			ref.update({'partyPay':pp});
+		}
+
+
+
+
+	});
+
+
+</script>

@@ -1,0 +1,143 @@
+<!--
+@license
+Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="pick-list4">
+
+<style>
+	:host {	}
+
+	
+
+</style>
+<template>
+
+
+	<paper-dialog id="listDialog" modal>
+	  <h2>{{eventName}} picklist</h2>
+	  <paper-dialog-scrollable>
+	    
+	    <paper-input id="filtertext" on-change="_rerender" label="search:"></paper-input>
+
+	  	<template is="dom-repeat" id="actuallist" items="{{itemList}}" filter="_listFilter" sort="_listSort">
+
+			<h3 on-tap="_selectAnItem">{{_itemDisplay(item)}}</h3>
+
+		</template>
+
+
+	  </paper-dialog-scrollable>
+	  <div class="buttons">
+	    <paper-button on-tap="_clear" dialog-dismiss>Cancel</paper-button>
+	  </div>
+	</paper-dialog>
+
+</template>
+
+</dom-module>
+
+<script>
+
+	Polymer({
+		is: 'pick-list4',
+
+		properties: {
+
+			itemList: {
+				type: Array,
+				value: function () {
+					return [];
+				}
+			},
+
+
+			eventName: {
+				type: String,
+				value: "default"
+			}
+
+		},
+
+		listShow: function () {
+			this.$.listDialog.open();
+		},
+
+		_selectAnItem: function (event) {
+			var evntnme = "selected-" + this.eventName;
+			this.fire(evntnme, event.model.item);
+			this.$.listDialog.close();
+			this.$.filtertext.value = "";
+			this.$.actuallist.render();
+		},
+
+		_clear: function () {
+			this.$.filtertext.value = "";
+			this.$.actuallist.render();
+		},
+
+		_rerender: function () {
+			this.$.actuallist.render();
+		},
+
+		_listFilter: function (z) {
+			var standard = this.$.filtertext.value.toLowerCase();
+
+			var aArray = z.name.split(" ");
+			var aLast = aArray.pop();
+			var a = aLast.toLowerCase();
+
+			
+			if (a.startsWith(standard)) {return true;}
+			
+			return false;
+		},
+
+		_listSort: function (z,b) {
+			var aArray = z.name.split(" ");
+			var aLast = aArray.pop();
+			var a = aLast.toLowerCase();
+			var bArray = b.name.split(" ");
+			var bLast = bArray.pop();
+			var b = bLast.toLowerCase();
+			if (a < b) {
+	          return -1;
+	        }
+	        if (a > b) {
+	          return 1;
+	        }
+	        return 0;
+		},
+
+		_itemDisplay: function (item) {
+			var aArray = item.name.split(" ");
+			var aLast = aArray.pop();
+			return aLast + ", " + aArray;
+			// if (item.hasOwnProperty('pickname')) {
+			// 	return item.pickname;
+			// }
+			// if (item.hasOwnProperty('name')) {
+			// 	return item.name;
+			// }
+			// if (item.hasOwnProperty('__firebaseKey__')) {
+			// 	return item.__firebaseKey__;
+			// }
+			// return "no display";
+		},
+
+
+		
+
+		_dateConvert: function (stringint) {
+			if (stringint != "" && stringint != null){
+				var d = new Date(parseInt(stringint));
+				return d.toLocaleDateString();
+			} else {
+				return "n/a";
+			}
+		}
+
+	});
+
+
+</script>

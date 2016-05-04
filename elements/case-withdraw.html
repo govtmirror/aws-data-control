@@ -1,0 +1,128 @@
+
+<!--
+@license
+Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="case-withdraw">
+
+  <style>
+    :host {
+      display: block;
+      box-sizing: border-box;
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 14px;
+      padding: 24px;
+      background-color: gray;
+      margin: 10px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    .nmbpanel {
+      background-color: #e0e0e0;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 10px;
+      color:black; 
+    }
+    paper-icon-button.orange {
+      color: var(--paper-orange-500);
+    }
+    paper-icon-button.orange:hover {
+      background: var(--paper-orange-50);
+      border-radius: 50%;
+    }
+    paper-button {
+      background-color: green;
+      color: white;
+      margin:10px;
+    }
+    
+  </style>
+
+  <template>
+
+    <div class="graycontainer">
+      <paper-icon-button icon="remove" class="orange" on-tap="_closetoggle" raised></paper-icon-button>
+      case withdrawal
+      <iron-collapse id="closebox">
+        <div class="nmbpanel">
+          <h3>Case:  <span>{{selectedCaseId}}</span></h3>
+          
+
+
+          <div class="nmbpanel">
+            <h3>Comment:</h3>
+            <textarea id="withdrawComment" rows="5" cols="60"></textarea>
+            <br>
+            <!-- <h3>Comments:</h3>
+            <template is="dom-repeat" items="{{_logs}}">
+              <p>
+                <span>{{dateConvert(item.stamp)}}</span>, <span>{{item.entry}}</span>
+              </p>
+            </template> -->
+          </div>
+          <paper-button id="adminclosebtn" on-tap="_withdrawIt">Withdraw</paper-button>
+        </div>
+      </iron-collapse>
+    </div> <!-- end of sort -->
+       
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+  is: 'case-withdraw',
+
+  properties: {
+
+    // selectedCase: {
+    //   type: Object,
+    //   value: function () {
+    //     return {};
+    //   }
+    // },
+    selectedCaseId: String,
+    userName: String
+
+  },
+
+  // Element Lifecycle
+
+  ready: function() {
+    // `ready` is called after all elements have been configured, but
+    // propagates bottom-up. This element's children are ready, but parents
+    // are not.
+    //
+    // This is the point where you should make modifications to the DOM (when
+    // necessary), or kick off any processes the element wants to perform.
+  },
+
+  // Element Behavior
+  _closetoggle: function () {
+    // console.log("in _closetoggle");
+    this.$.closebox.toggle();
+  },
+
+  // utilities
+
+  _withdrawIt: function() {
+    this.fire('case-withdraw', {'comment':this.$.withdrawComment.value});
+  }
+
+  // dateConvert: function (stringint) {
+  //   if (stringint != "" && stringint != null){
+  //     var d = new Date(parseInt(stringint));
+  //     return d.toLocaleDateString();
+  //   } else {
+  //     return "n/a";
+  //   }
+  // }
+
+});
+
+</script>

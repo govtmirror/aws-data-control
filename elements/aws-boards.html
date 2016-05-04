@@ -1,0 +1,120 @@
+<!--
+@license
+Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="aws-boards">
+
+<style>
+
+	.lay-horizontal {
+		@apply(--layout-horizontal);
+	}
+
+	.mainarea {
+		@apply(--layout-vertical);
+		@apply(--layout-flex);
+	}
+
+	.graycontainer {
+		margin:10px;
+		padding:10px;
+		border-radius: 10px;
+		background-color: gray;
+	}
+
+	board-list {
+		width: 350px;
+	}
+
+</style>
+<template>
+
+
+<board-data
+		fire-db="{{fireDb}}"
+		boards="{{boards}}"
+		selected-board="{{selectedBoard}}"
+		selected-boardid="{{selectedBoardid}}"
+		comments="{{comments}}"
+		carriers="{{carriers}}"
+		unions="{{unions}}"
+		id="datafacade">
+</board-data>
+
+<div class="lay-horizontal">
+	<board-list 
+			class="graycontainer"
+			boards="[[boards]]"
+			selected-boardid="[[selectedBoardid]]">
+	</board-list>
+	<div class="mainarea">
+		<board-actions 
+				selected-board="{{selectedBoard}}"
+				selected-boardid="[[selectedBoardid]]">
+		</board-actions>
+		<board-new
+				carriers="[[carriers]]"
+				unions="[[unions]]">
+		</board-new>
+		<board-comments 
+				comments="[[comments]]">
+		</board-comments>
+	</div>
+</div>
+
+
+</template>
+
+</dom-module>
+
+<script>
+
+	Polymer({
+		is: 'aws-boards',
+
+		properties: {
+
+			fireDb: {
+				type: String,
+				value: null,
+				notify: true
+			}
+
+		},
+
+
+		ready: function () {
+			this.addEventListener('board-selected', function(event) {
+	          		this.$.datafacade.setSelectedBoardUrl(event.detail.boardId);
+	          		// alert("yo " + event.detail.boardId)
+          		}	
+          	);
+          	this.addEventListener('new-board', function(event) {
+          			// alert("yo " + event.detail.board)
+	          		this.$.datafacade.newBoard(event.detail);
+          		}	
+          	);
+          	this.addEventListener('close-board', function(event) {
+          			// alert("yo close " + event.detail.board)
+	          		this.$.datafacade.closeBoard(event.detail.board);
+          		}	
+          	);
+          	this.addEventListener('new-comment', function(event) {
+          			// alert("yo close " + event.detail.entry)
+	          		this.$.datafacade.newComment(event.detail.entry);
+          		}	
+          	);
+          	this.addEventListener('pp-toggle', function(event) {
+          			// alert("yo close " + event.detail.entry)
+	          		this.$.datafacade.ppToggle(event.detail);
+          		}	
+          	);
+		}
+
+	});
+
+
+
+
+</script>

@@ -1,0 +1,210 @@
+
+<!--
+@license
+Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="case-new">
+
+  <style>
+    :host {
+      display: block;
+      box-sizing: border-box;
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 14px;
+      padding: 24px;
+      background-color: gray;
+      margin: 10px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    .nmbpanel {
+      background-color: #e0e0e0;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 10px;
+      color:black; 
+    }
+    paper-icon-button.orange {
+      color: var(--paper-orange-500);
+    }
+    paper-icon-button.orange:hover {
+      background: var(--paper-orange-50);
+      border-radius: 50%;
+    }
+    paper-button {
+      background-color: green;
+      color: white;
+      margin:10px;
+    }
+
+  </style>
+
+  <template>
+
+    <pick-list2
+        id="pickBoard"
+        item-list="{{boards}}"
+        event-name="boards">
+    </pick-list2>
+    <pick-list3 
+        id="pickSubject"
+        item-list="{{subjects}}"
+        event-name="subjects">
+    </pick-list3>
+
+    <paper-dialog modal id="newcasedialog">
+      <h2>New Case?</h2>
+      <div>
+        <table>
+          <tr><td>Board:</td><td>{{selectedBoardId}}</td></tr>
+          <tr><td>Subject:</td><td>{{selectedSubjectId}}</td></tr>
+          <tr><td>Open Date:</td><td>{{_dateConvert(_dateOpenStr)}}</td></tr>
+        </table>
+      </div>
+      <div class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm on-tap="_addCase">Create New Case</paper-button>
+      </div>
+    </paper-dialog>
+
+
+    </div>     
+      <div class="graycontainer">
+        <paper-icon-button icon="add" class="orange" on-tap="_addtoggle" raised></paper-icon-button>
+        add a case
+        <iron-collapse id="addbox">
+
+          <div class="nmbpanel">
+
+            
+            <paper-button id="boardbtn" on-tap="_showBoards">Board:</paper-button>
+            <span>{{selectedBoardId}}, {{selectedBoard.carrierAbbr}} & {{selectedBoard.unionAbbr}}, Last Case was {{selectedBoard.lastused}}</span>
+            
+            <br>
+            <paper-button id="subjectbtn" on-tap="_showSubjects">Subject:</paper-button>
+            <span>{{selectedSubjectId}} - {{selectedSubject.name}}</span>
+            
+            <br> <br>  
+
+            <label>Open Date</label>
+            <input type="date" id="selectdateid" on-change="_openDateChange" required></input>
+            <br><br>
+                
+            <paper-button id="newcasebtn" on-tap="_showNewCaseDialog">ADD a Case</paper-button>
+             
+          </div>
+
+        </iron-collapse>
+      </div>  <!-- end of new case -->
+    
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+  is: 'case-new',
+
+  properties: {
+
+    boards: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    selectedBoard: Object,
+    selectedBoardId: String,
+
+    subjects: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    selectedSubject: Object,
+    selectedSubjectId: String,
+
+    _dateOpenStr: String
+
+  },
+
+  _showBoards: function () {
+    this.$.pickBoard.listShow();
+  },
+
+  _showSubjects: function () {
+    this.$.pickSubject.listShow();
+  },
+
+  _showNewCaseDialog: function () {
+    this.$.newcasedialog.open();
+  },
+
+  // Element Lifecycle
+
+
+
+  // Element Behavior
+
+  _addtoggle: function () {
+    // console.log("in _addtoggle");
+    this.$.addbox.toggle();
+  },
+  _addCase: function () { 
+    
+    if (this._dateOpenStr == undefined || this._dateOpenStr == "NaN") {
+      alert("please enter an opening date");
+      return;
+    }
+    if (this.selectedBoardId == undefined || this.selectedSubjectId == undefined) {
+      alert("please select both board and subject");
+      return;
+    }
+    if (this.selectedBoard.partyPay) {
+      alert("this is a Party Pay Board");
+      return;
+    }
+    var cldt = this.selectedBoard.hasOwnProperty('closeDate');
+    console.log("has closeDate = " + cldt + ", " + this.selectedBoard.closeDate);
+    if (cldt) {
+      console.log("closeDate = " + this.selectedBoard.closeDate);
+      if (this.selectedBoard.closeDate != "") {
+        alert("This board is not open");
+        return;
+      }
+    }
+    var params = {
+      'board':this.selectedBoardId,
+      'subject':this.selectedSubject.name,
+      'dateOpen':this._dateOpenStr
+    }
+    this.fire('case-new', params);
+  },
+
+
+  _openDateChange: function () {
+    var tempDate = new Date(this.$.selectdateid.value);
+    var tempDateInt = tempDate.getTime() + (12 * 3600 * 1000);
+    this._dateOpenStr = tempDateInt.toString();
+  },
+
+  _dateConvert: function (stringint) {
+      if (stringint != "" && stringint != null){
+        var d = new Date(parseInt(stringint));
+        return d.toLocaleDateString();
+      } else {
+        return "n/a";
+      }
+    }
+
+
+});
+
+</script>

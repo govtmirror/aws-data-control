@@ -1,0 +1,142 @@
+<!--
+@license
+Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="aws-rev-cases">
+
+  <style>
+    :host {
+      display: block;
+      box-sizing: border-box;
+      background-color: var(--paper-grey-300);
+    }
+
+    .case-list {
+      width: 300px;
+    }
+
+  </style>
+  <template>
+    <case-data
+        id="datafacade"
+        fb-url="{{fbUrl}}"
+        arbcases="{{arbcases}}"
+        boards="{{boards}}"
+        carriers="{{carriers}}"
+        unions="{{unions}}"
+        subjects="{{subjects}}"
+        selected-case="{{selectedCase}}"
+        selected-case-id="{{selectedCaseId}}"
+        selected-board="{{selectedBoard}}"
+        selected-board-id="{{selectedBoardId}}"
+        selected-subject="{{selectedSubject}}"
+        selected-subject-id="{{selectedSubjectId}}"
+        selected-log="{{selectedLog}}">
+    </case-data>
+
+
+    <div class="layout horizontal">
+      <div class="case-list">
+        <case-list
+            selected-case-id="{{selectedCaseId}}"
+            arbcases="{{arbcases}}">
+        </case-list>
+      </div>
+      <div id="forms" class="flex">
+        <case-detail
+            selected-case="{{selectedCase}}"
+            user-name="{{userName}}"
+            unions="{{unions}}"
+            carriers="{{carriers}}"
+            selected-case-id="{{selectedCaseId}}"
+            selected-log="{{selectedLog}}">
+        </case-detail>
+        <case-new
+            subjects="{{subjects}}"
+            boards="{{boards}}"
+            selected-board="{{selectedBoard}}"
+            selected-board-id="{{selectedBoardId}}"
+            selected-subject="{{selectedSubject}}"
+            selected-subject-id="{{selectedSubjectId}}">
+        </case-new>
+        <case-withdraw
+            selected-case-id="{{selectedCaseId}}">
+        </case-withdraw>
+      </div>
+    </div>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+    is: 'aws-rev-cases',
+    
+    properties: {
+      titlebartext: {
+        type: String,
+        value: "AWS Reviewer Case Creation"
+      },
+      fireDb: String,
+      boards: Array,
+      userName: String
+      
+    },
+
+    ready: function () {
+      this.addEventListener('case-edit', function(event) {
+        this.$.datafacade.updateSelectedArbcase(event.detail);
+        var commentStr = "Case Edit";
+        var commentParams = {
+          "username": this.userName,
+          "entry": commentStr,
+          "stamp": Date.now().toString()
+        }
+        this.$.datafacade.makeComment(commentParams);
+      });
+      this.addEventListener('case-selected', function(event) {
+        this.$.datafacade.setSelectedCaseUrl(event.detail.caseId);
+      });
+      this.addEventListener('case-comment', function(event) {
+        this.$.datafacade.makeComment(event.detail);
+      });
+      this.addEventListener('case-new', function(event) {
+        this.$.datafacade.newCase(event.detail);
+      });
+      this.addEventListener('case-withdraw', function(event) {
+        var yonow = Date.now().toString();
+        var paramStr = {
+          "disposition": "withdrawn",
+          "dateClosed": yonow,
+          "open": null
+        };
+        this.$.datafacade.updateSelectedArbcase(paramStr);
+        var commentStr = "Case withdrawn - " + event.detail.comment;
+
+        
+
+        var commentParams = {
+          "username": this.userName,
+          "entry": commentStr,
+          "stamp": Date.now().toString()
+        }
+        this.$.datafacade.makeComment(commentParams);
+        alert("case withdrawn");
+      });
+      this.addEventListener('selected-boards', function (e) {
+        // alert("catching selected-boards");
+        this.$.datafacade.getSelectedBoard(event.detail)
+      });
+      this.addEventListener('selected-subjects', function (e) {
+        // alert("catching selected-subjects");
+        this.$.datafacade.getSelectedSubject(event.detail)
+      });
+    },
+          
+  });
+
+
+</script>

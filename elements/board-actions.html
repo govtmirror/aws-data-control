@@ -1,0 +1,134 @@
+<!--
+@license
+Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="board-actions">
+
+<style>
+	:host {
+		@apply(--paper-font-body1);
+		color: var(--primary-text-color);
+		background-color: var(--primary-background-color);
+		margin:10px;
+		padding:10px;
+		border-radius: 10px;
+	}
+
+	paper-button {
+		background-color: #ffaaaa;
+	}
+
+	.grn {
+		background-color: green;
+	}
+
+	.rd {
+		background-color: red;
+	}
+
+
+</style>
+<template>
+
+	<paper-dialog id="closeConfirmDialog" modal>
+	  <h2>Are you sure you want to Close {{selectedBoardid}}?</h2>
+	  
+	  <div class="buttons">
+	    <paper-button dialog-dismiss>Cancel</paper-button>
+	    <paper-button on-tap="_closeIt" dialog-confirm>Accept</paper-button>
+	  </div>
+	</paper-dialog>
+
+	<div>
+		<div>{{selectedBoardid}},  {{selectedBoard.carrierAbbr}} - {{selectedBoard.unionAbbr}}</div>
+
+		<div>{{selectedBoard.carrier}}</div>
+		<div>{{selectedBoard.union}}</div>
+
+		<div>Open Date = {{_dateConvert(selectedBoard.openDate)}}</div>
+		<div>Close Date = {{_dateConvert(selectedBoard.closeDate)}}</div>
+
+		<div>Last used case number = {{selectedBoard.lastused}}</div>
+	</div>
+	<div>
+		<paper-button 
+				on-tap="_openDialog">
+			Close {{selectedBoardid}}
+		</paper-button>
+		<paper-button 
+				on-tap="_partyPayToggle" 
+				class$="{{_ppClass(selectedBoard.partyPay)}}">
+			{{_partyPayMsg(selectedBoard.partyPay)}}
+		</paper-button>
+	</div>
+	
+
+
+</template>
+
+</dom-module>
+
+<script>
+
+	Polymer({
+		is: 'board-actions',
+
+		properties: {
+
+			selectedBoard: {
+				type: Object,
+				value: function () {
+					return {};
+				}
+			},
+			selectedBoardid: String
+
+		},
+
+		_openDialog: function () {
+			this.$.closeConfirmDialog.open();
+		},
+
+		_closeIt: function () {
+			this.fire('close-board', { 'board': this.selectedBoardid });
+		},
+
+		_partyPayToggle: function () {
+			// alert("PP Toggle");
+			var ppValue = true;
+			if (this.selectedBoard.partyPay) {
+				ppValue = false;
+			}
+			this.fire('pp-toggle', {'board': this.selectedBoardid, 'partyPay': ppValue});
+		},
+
+		_partyPayMsg: function (pp) {
+			if (pp) {
+				return "Convert to \"NMB Pays\"";
+			} else {
+				return "Change to \"Party Pay\"";
+			}
+		},
+
+		_ppClass: function (pp) {
+			if (pp) {
+				return "grn";
+			} else {
+				return "rd";
+			}
+		},
+
+		_dateConvert: function (stringint) {
+			if (stringint != "" && stringint != null){
+				var d = new Date(parseInt(stringint));
+				return d.toLocaleDateString();
+			} else {
+				return "n/a";
+			}
+		}
+
+	});
+
+
+</script>

@@ -1,0 +1,327 @@
+
+<!--
+@license
+Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="case-detail">
+  <style>
+    :host {
+      display: block;
+      box-sizing: border-box;
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 14px;
+      padding: 24px;
+      background-color: gray;
+      margin: 10px;
+      border-radius: 10px;
+      color:white;
+    }
+
+    .nmbpanel {
+      background-color: #e0e0e0;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 10px;
+      color:black; 
+    }
+
+    paper-icon-button.orange {
+      color: var(--paper-orange-500);
+    }
+    paper-icon-button.orange:hover {
+      background: var(--paper-orange-50);
+      border-radius: 50%;
+    }
+    paper-button {
+      background-color: green;
+      color: white;
+      margin:10px;
+    }
+
+    tr, td, th {
+      padding: 5px;
+      color:#002255;
+    }
+    th {
+      background-color: gray;
+      color: white;
+    }
+    .tdcenter {
+      text-align: center;
+    }
+    tr:nth-child(even) {background: #CCC}
+    tr:nth-child(odd) {background: #ddd}
+    
+      
+    </style>
+
+  <template>
+
+    <pick-list 
+        id="pickCarrier"
+        item-list="{{carriers}}"
+        event-name="carrier">
+    </pick-list>
+    <pick-list 
+        id="pickUnion"
+        item-list="{{unions}}"
+        event-name="union">
+    </pick-list>
+
+
+
+    <paper-icon-button icon="description" class="orange" on-tap="_detailtoggle" raised></paper-icon-button>
+    selected case <h3>{{selectedCaseId}}</h3>
+    <iron-collapse id="detailbox">
+
+    <div class="layout horizontal">
+      <div class="nmbpanel">
+        <table>
+          <tr>
+            <td>Case Number:</td>
+            <td>{{selectedCaseId}}</td>
+          </tr>
+          <tr>
+            <td>Arbitrator:</td>
+            <td>{{selectedCase.arbitrator}}</td>
+          </tr>
+          <tr>
+            <td>Status:</td>
+            <td>{{_statusString}}</td>
+          </tr>
+          <tr>
+            <td>Disposition:</td>
+            <td>{{_dispositionState}}</td>
+          </tr>
+
+          <tr>
+            <td><paper-button on-tap="_showUnion">Union</paper-button></td>
+            <td>{{selectedCase.union}}</td>
+          </tr>
+        
+          <tr>
+            <td><paper-button on-tap="_showCarrier">Carrier</paper-button></td>
+            <td>{{selectedCase.carrier}}</td>
+          </tr>
+
+
+          <tr>
+            <td>Open Date:</td>
+            <td>{{_dateConvert(selectedCase.dateOpened)}}</td>
+          </tr>
+          <tr>
+            <td>Assign Date:</td>
+            <td>{{_dateConvert(selectedCase.dateAssigned)}}</td>
+          </tr>
+          <tr>
+            <td>Heard Date:</td>
+            <td>{{_dateConvert(selectedCase.dateHeard)}}</td>
+          </tr>
+          <tr>
+            <td>Writing Date:</td>
+            <td>{{_dateConvert(selectedCase.dateWritten)}}</td>
+          <tr>
+            <td>Award:</td>
+            <td>{{selectedCase.award}}</td>
+          </tr>
+          </tr>
+          <tr>
+            <td>Close Date:</td>
+            <td>{{_dateConvert(selectedCase.dateClosed)}}</td>
+          </tr>
+          <tr>
+            <td>Subject:</td>
+            <td>{{selectedCase.subject}}</td>
+          </tr>
+          <tr>
+            <td>Document Due Date</td>
+            <td>{{_dateConvert(selectedCase.dueDate)}}</td>
+          </tr>
+          <tr>
+            <td>Carrier Submission </td>
+            <td>
+              <span>{{_dateConvert(selectedCase.cSub)}}</span>
+              <input type="date" id="cSubInput" on-change="_cSubChange">
+            </td>
+          </tr>
+          <tr>
+            <td>Union Submission</td>
+            <td>
+              <span>{{_dateConvert(selectedCase.uSub)}}</span>
+              <input type="date" id="uSubInput" on-change="_uSubChange">
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="nmbpanel">
+        <textarea id="caseComment" rows="5" cols="60"></textarea>
+        <br>
+        <paper-button id="commentbtn" on-tap="_saveLog">Save New Comment</paper-button>
+        <h3>Comments:</h3>
+        <template is="dom-repeat" items="{{selectedLog}}">
+          <p>
+            <span>{{_dateConvert(item.stamp)}}</span>, <span>{{item.username}}</span>, <span>{{item.entry}}</span>
+          </p>
+        </template>
+      </div>
+
+    </iron-collapse>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+  is: 'case-detail',
+
+  properties: {
+
+    selectedCase: {
+      type: Object,
+      value: function () {
+        return {};
+      },
+      observer: '_displayStatus'
+    },
+    selectedCaseId: {
+      type: String
+    },
+
+    userName: String,
+
+    selectedLog: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    unions: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+    
+    carriers: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+    _statusString: {
+      type: String,
+      value: "no Case"
+    },
+    _dispositionState: String
+   
+  },
+
+  // Element Behavior
+
+  _detailtoggle: function () {
+    this.$.detailbox.toggle();
+  },
+
+  _showCarrier: function () {
+    this.$.pickCarrier.listShow();
+  },
+
+  _showUnion: function () {
+    this.$.pickUnion.listShow();
+  },
+
+
+  _cSubChange: function () {
+    if(this.selectedCaseId) {
+      var tempDate = new Date(this.$.cSubInput.value);
+      var tempDateInt = tempDate.getTime() + (12 * 3600 * 1000);
+      var tempDateStr = tempDateInt.toString();
+      this.fire('case-edit', {'cSub': tempDateStr});
+    } else {
+      alert("please select a Case.")
+    }
+  },
+
+  _uSubChange: function () {
+    if(this.selectedCaseId) {
+      var tempDate = new Date(this.$.uSubInput.value);
+      var tempDateInt = tempDate.getTime() + (12 * 3600 * 1000);
+      var tempDateStr = tempDateInt.toString();
+      this.fire('case-edit', {'uSub': tempDateStr});
+    } else {
+      alert("please select a Case.")
+    }
+  },
+
+  _saveLog: function () {
+    if (this.selectedCaseId) {
+      var params = {
+                    "entry": this.$.caseComment.value,
+                    "username": this.userName,
+                    "stamp": Date.now().toString()
+                  };
+      this.fire('case-comment', params);
+      this.$.caseComment.value = "";
+    } else {
+      alert("please select a case to comment on.")
+    }
+      
+  },
+
+
+  ready: function () {
+    this.addEventListener('selected-carrier', function(event) {
+      if(this.selectedCaseId) {
+        this.fire('case-edit', {"carrier": event.detail.name, "carrierAbbr": event.detail.__firebaseKey__});
+      } else {
+        alert("please select a Case.")
+      }
+
+    });
+    this.addEventListener('selected-union', function(event) {
+      if(this.selectedCaseId) {
+        this.fire('case-edit', {"union": event.detail.name, "unionAbbr": event.detail.__firebaseKey__});
+      } else {
+        alert("please select a Case.")
+      }
+    });
+  },
+
+  _displayStatus: function () {
+    if (this.selectedCase.hasOwnProperty('open')) {
+      if (this.selectedCase.open == true){
+        this._statusString = "open";
+      } else {
+        this._statusString = "closed";
+      } 
+    } else {
+      this._statusString = "closed";
+    }
+
+    if (this.selectedCase.hasOwnProperty('dispostion')) {
+      this._dispositionState = this.selectedCase.dispostion;
+    }
+    if (this.selectedCase.hasOwnProperty('disposition')) {
+      this._dispositionState = this.selectedCase.disposition;
+    }
+
+
+  },
+
+  _dateConvert: function (stringint) {
+    if (stringint != "" && stringint != null){
+      var d = new Date(parseInt(stringint));
+      return d.toLocaleDateString();
+    } else {
+      return "n/a";
+    }
+  },
+
+});
+
+</script>

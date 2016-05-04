@@ -1,0 +1,203 @@
+<!--
+@license
+Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="board-new">
+
+<style>
+	:host {
+		@apply(--paper-font-body1);
+		color: var(--primary-text-color);
+		background-color: var(--primary-background-color);
+		margin:10px;
+		padding:10px;
+		border-radius: 10px;
+	}
+
+	paper-input {
+		width:20em;
+	}
+
+	paper-button {
+		background-color: var(--primary-color);
+		color: var(--dark-theme-text-color);
+		margin: 10px;
+	}
+
+	paper-button[disabled] {
+		background-color: gray;
+	}
+
+	.grn {
+		background-color: green;
+	}
+
+</style>
+<template>
+	<pick-list 
+			id="pickCarrier"
+			item-list="{{carriers}}"
+			event-name="carrier">
+	</pick-list>
+	<pick-list 
+			id="pickUnion"
+			item-list="{{unions}}"
+			event-name="union">
+	</pick-list>
+	<paper-dialog id="saveNewDialog" modal>
+	  <h2>Proposed new board</h2>
+	  <div>
+	  	<table>
+	  		<tr><td>Board Number</td><td>{{_newBoardNumber}}</td></tr>
+	  		<tr><td>Carrier</td><td>{{_selectedCarrier.name}}</td></tr>
+	  		<tr><td>Carrier Abbr.</td><td>{{_selectedCarrier.__firebaseKey__}}</td></tr>
+	  		<tr><td>Union</td><td>{{_selectedUnion.name}}</td></tr>
+	  		<tr><td>Union Abbr.</td><td>{{_selectedUnion.__firebaseKey__}}</td></tr>
+	  		<tr><td>Last Case Used</td><td>{{_newLastUsed}}</td></tr>
+	  		<tr><td>Date Opened</td><td>{{_newDateOpen}}</td></tr>
+	  	</table>
+	  </div>
+	  <div class="buttons">
+	    <paper-button dialog-dismiss>Cancel</paper-button>
+	    <paper-button id="saveBtn" dialog-confirm on-tap="_doNewSave">{{_msg}}</paper-button>
+	  </div>
+	</paper-dialog>
+
+
+
+	<paper-button on-tap="_openSaveDialog" class="grn">Create New</paper-button>
+	<paper-input 
+			label="Board #:" 
+			id="bdNumberTextInput" 
+			auto-validate 
+			pattern="(NRAB-|PLB-|SBA-)[1-9][0-9]?[0-9]?[0-9]?[0-9]?"
+			error-message="incorrect board name">
+	</paper-input>
+	<paper-input label="Lastused #:" id="lastUsedInput" type="Number"></paper-input>
+	<paper-input label="date opened" id="openDateInput" type="Date"></paper-input>
+	<div>
+		<paper-button on-tap="_showCarrier">Carrier</paper-button>
+		<span>  =>  {{_selectedCarrier.name}}</span>
+	</div>
+	<div>
+		<paper-button on-tap="_showUnion">Union</paper-button>
+		<span>  =>  {{_selectedUnion.name}}</span>
+	</div>
+
+	
+	
+	
+	
+
+
+</template>
+
+</dom-module>
+
+<script>
+
+	Polymer({
+		is: 'board-new',
+
+		properties: {
+
+			carriers: {
+				type: Array,
+				value: function () {
+					return [];
+				}
+			},
+			_selectedCarrier: Object,
+
+			unions: {
+				type: Array,
+				value: function () {
+					return [];
+				}
+			},
+
+			_selectedUnion: Object,
+
+			_newBoardNumber: String,
+
+			_newLastUsed: String,
+
+			_newDateOpen: String,
+
+			_msg: String
+
+		},
+
+		_showCarrier: function () {
+			this.$.pickCarrier.listShow();
+		},
+
+		_showUnion: function () {
+			this.$.pickUnion.listShow();
+		},
+
+		_openSaveDialog: function () {
+
+			this._newBoardNumber = this.$.bdNumberTextInput.value;
+			this._newLastUsed = this.$.lastUsedInput.value;
+			this._newDateOpen = this.$.openDateInput.value;
+
+			// alert("carrier is => " + this._selectedCarrier);
+			this.$.saveBtn.disabled = false;
+			this._msg = "Create New Board"
+			if (this.$.bdNumberTextInput.invalid ||
+				this.$.lastUsedInput.value == "" ||
+				this.$.openDateInput.value == "" ||
+				this._selectedCarrier == undefined ||
+				this._selectedUnion == undefined) {
+				this._msg = "Cannot Create"
+				this.$.saveBtn.disabled = true;
+			}
+		
+			this.$.saveNewDialog.open();
+		},
+
+		_doNewSave: function () {
+			// alert("in new-board on-tap");
+			var tempDate = new Date(this.$.openDateInput.value);
+		    var tempDateInt = tempDate.getTime() + (12 * 3600 * 1000);
+		    var dateOpenStr = tempDateInt.toString();
+
+			this.fire('new-board', {
+				'board': this.$.bdNumberTextInput.value,
+				'lastused': this.$.lastUsedInput.value,
+				'openDate': dateOpenStr,
+				'carrier': this._selectedCarrier.name,
+				'carrierAbbr': this._selectedCarrier.__firebaseKey__,
+				'union': this._selectedUnion.name,
+				'unionAbbr': this._selectedUnion.__firebaseKey__,
+				'closeDate': ""
+			});
+		},
+
+		
+
+		ready: function () {
+			this.addEventListener('selected-carrier', function(event) {
+				this._selectedCarrier = event.detail;
+
+			});
+			this.addEventListener('selected-union', function(event) {
+				this._selectedUnion = event.detail;
+			});
+		},
+
+		_dateConvert: function (stringint) {
+			if (stringint != "" && stringint != null){
+				var d = new Date(parseInt(stringint));
+				return d.toLocaleDateString();
+			} else {
+				return "n/a";
+			}
+		}
+
+	});
+
+
+</script>

@@ -1,0 +1,76 @@
+<!--
+@license
+Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="board-comments">
+
+<style>
+	:host {
+		@apply(--paper-font-body1);
+		color: var(--primary-text-color);
+		background-color: var(--primary-background-color);
+		margin:10px;
+		padding:10px;
+		border-radius: 10px;
+	}
+
+	.grn {
+		background-color: green;
+		color: white;
+	}
+
+</style>
+<template>
+
+<h1>comments</h1>
+
+	<textarea id="boardComment" rows="5" cols="60"></textarea>
+	<br>
+	<paper-button id="commentbtn" class="grn" on-tap="_saveComment">Save New Comment</paper-button>
+	<h3>Comments:</h3>
+	<template is="dom-repeat" items="{{comments}}">
+		<p>
+		  <span>{{_dateConvert(item.stamp)}}</span>, <span>{{item.entry}}</span>
+		</p>
+	</template>
+
+
+</template>
+
+</dom-module>
+
+<script>
+
+	Polymer({
+		is: 'board-comments',
+
+		properties: {
+			comments: {
+				type: Array,
+				value: function () {
+					return [];
+				}
+			}
+		},
+
+		_saveComment: function () {
+			// alert("about to fire " + this.$.boardComment.value);
+			this.fire('new-comment', {'entry': this.$.boardComment.value});
+			this.$.boardComment.value = "";
+		},
+
+		_dateConvert: function (stringint) {
+	     if (stringint != "" && stringint != null){
+	       var d = new Date(parseInt(stringint));
+	       return d.toLocaleDateString();
+	     } else {
+	       return "n/a";
+	     }
+	    },
+		
+
+	});
+
+
+</script>

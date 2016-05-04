@@ -1,0 +1,301 @@
+
+<!--
+@license
+Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="case-list">
+
+  <style>
+    :host {
+      display: block;
+      box-sizing: border-box;
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 14px;
+      background-color: #eee;
+      border-radius: 10px;
+      /*padding:10px;*/
+    }
+    .caseitem {
+      padding: 10px;
+      margin: 10px;
+      background-color: #ddd
+    }
+    .selectedcase {
+      padding: 10px;
+      margin: 10px;
+      background-color: gray;
+      color: white;
+    }
+    .smallfont {
+      font-size: .75em;
+    }
+    .flex-horizontal {
+      @apply(--layout-horizontal);
+      @apply(--layout-center);
+    }
+    .flexchild {
+      @apply(--layout-flex);
+    }
+    .listhead {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background-color: #ddd;
+    }
+    #actualList {
+      margin: 10px;
+      margin-top: 25px;
+    }
+
+    paper-scroll-header-panel {
+      height: 100%;
+    }
+    .caselistcontainer {
+      height: 85vh;
+    }
+
+  </style>
+
+  <template>
+    <div class="caselistcontainer">
+      <paper-scroll-header-panel>
+        <!-- <div class="paper-header listhead"> -->
+        <div class="listhead">
+          <div class="flex-horizontal">
+            <paper-icon-button
+                icon="{{_toggleState}}"
+                on-tap="_doSearchToggle">
+            </paper-icon-button>
+            <div class="flexchild">Search Form</div>
+          </div>
+
+          <iron-collapse id="searchform">
+            <hr>
+            <paper-radio-button 
+                checked
+                id="getOpen" >
+              Open
+            </paper-radio-button>
+            <paper-radio-button 
+                id="getClosed">
+              Closed
+            </paper-radio-button>
+            <paper-input 
+                id="casetest"
+                label="Case number:" >
+            </paper-input>
+            <paper-input 
+                id="arbtest"
+                label="Arbitrator:">
+            </paper-input>
+            <div class="flex-horizontal">             
+              <div class="flexchild"></div>
+              <paper-icon-button
+                  icon="search"
+                  on-tap="_doListSort">
+              </paper-icon-button>
+              <paper-icon-button
+                  icon="clear"
+                  on-tap="_doClearList">
+              </paper-icon-button>
+            </div>
+          </iron-collapse>
+
+        </div>
+        <div id="actualList">
+
+          <template is="dom-repeat" id="caselist" items="{{arbcases}}" filter="isDisplay">
+            <div on-tap="_itemtap" class="caseitem">
+              <span>[[item.__firebaseKey__]]</span>
+              <span>,  </span>
+              <span class="smallfont">[[item.carrierAbbr]]</span>
+              <span class="smallfont"> / </span>
+              <span class="smallfont">[[item.unionAbbr]]</span><br>
+              <span class="smallfont">Assigned: </span>
+              <span class="smallfont">[[item.arbitrator]]</span>
+              <span class="smallfont"> on </span>
+              <span class="smallfont">[[dateConvert(item.dateAssigned)]]</span>
+              
+            </div>
+          </template>
+
+        </div>
+      </paper-scroll-header-panel>
+    </div>
+  </template>
+
+
+  
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+  is: 'case-list',
+
+  properties: {
+
+    arbcases: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    selectedCaseId: {
+      type: String//,
+      // observer: '_renderlist'
+    },
+
+    // _arbcasesStartsWith: {
+    //   type: String,
+    //   value: "x"
+    // },
+
+    _toggleState: {
+      type: String,
+      value: "arrow-downward"
+    },
+
+
+  },
+
+  // Element Behavior
+
+  _itemtap: function (event) {
+
+    // try {
+    //   this.toggleClass('caseselected', false, this.$$('.caseselected'));
+    // } 
+    // catch(err) {
+    //   console.log("no caseselected");
+    // }
+    // if (event.target.nodeName != "DIV") {
+    //   this.toggleClass('caseselected', true, event.target.parentNode);
+    // } else {
+    //   this.toggleClass('caseselected', true, event.target);
+    // }
+
+
+    this.fire('case-selected', {"caseId": event.model.item.__firebaseKey__});
+  },
+
+  _doListSort: function () {
+    // zalert("in list sort " + this.$.boardtest.value);
+    this.$.caselist.render();
+  },
+  _doClearList: function () {
+    this.$.getOpen.checked = false;
+    this.$.getClosed.checked = false;
+    this.$.casetest.value = "";
+    this.$.arbtest.value = "";
+    // alert("_doClearList");
+  },
+
+  isDisplay: function (item) {
+    // console.log(this._getState(item) + ", " + 
+    //         this._caseStartsWith(item) + ", " +
+    //         this._arbStartsWith(item))
+    return this._getState(item) && 
+           this._caseStartsWith(item) &&
+           this._arbStartsWith(item);
+
+  },
+
+  // _setItemClass: function (caseid) {
+  //   if (caseid == this.selectedCaseId) {
+  //     console.log(caseid + "class is selectedcase");
+  //     return "selectedcase";
+  //   } else {
+  //     console.log("caseitem " + this.selectedCaseId);
+  //     return "caseitem";
+  //   }
+  // },
+
+  // _renderlist: function () {
+  //   console.log("in _renderlist");
+  //   this.$.caselist.render();
+  // },
+
+  _getState: function (item) {
+    var o = this.$.getOpen.checked;
+    var c = this.$.getClosed.checked;
+    var closed = true;
+    if (item.open) {
+      closed = false;
+    }
+    if (closed && c) { return true;} 
+    if (!closed && o) { return true;}
+    return false;
+  },
+  _caseStartsWith: function (item) {
+    var teststring = this.$.casetest.value;
+    if (teststring) {
+      return item.__firebaseKey__.startsWith(teststring);
+    } else {
+      return true;
+    }  
+  },
+  _arbStartsWith: function (item) {
+    var teststring = this.$.arbtest.value;
+    if (teststring) {
+      if (item.hasOwnProperty('arbitrator')) {
+        return item.arbitrator.startsWith(teststring);
+      } else {
+        return false;
+      }
+    } else {
+      return true;
+    }  
+  },
+
+  _doSearchToggle: function () {
+    this.$.searchform.toggle();
+    if (this.$.searchform.opened) {
+      this._toggleState = "arrow-upward"
+    } else {
+      this._toggleState = "arrow-downward"
+    }
+  },
+
+  // utilities
+
+  dateConvert: function (stringint) {
+    if (stringint != "" && stringint != null){
+      var d = new Date(parseInt(stringint));
+      return d.toLocaleDateString();
+    } else {
+      return "n/a";
+    }
+  },
+
+
+  computeFilter: function(string) {
+    if (!string) {
+      return function (item) {
+        return item.__firebaseKey__.startsWith("X");
+      }
+    } else {
+      return function (item) {
+        return item.__firebaseKey__.startsWith(string);
+      }
+    }
+  },
+
+  _arbcasesSort: function (a,b) {
+    if (a.__firebaseKey__.toLowerCase() < b.__firebaseKey__.toLowerCase()) {
+      return -1;
+    }
+    if (a.__firebaseKey__.toLowerCase() > b.__firebaseKey__.toLowerCase()) {
+      return 1;
+    }
+    return 0;
+  }
+
+
+});
+
+</script>

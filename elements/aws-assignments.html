@@ -1,0 +1,585 @@
+<!--
+@license
+Copyright (c) 2015 Dean Wagner (wagner@nmb.gov). All rights reserved.
+-->
+
+<!-- <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-collapse/iron-collapse.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-list/iron-list.html">
+<link rel="import" href="../iron-selector/iron-selector.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../paper-material/paper-material.html">
+<link rel="import" href="../paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../paper-toolbar/paper-toolbar.html">
+
+<script src="https://cdn.firebase.com/js/client/2.2.7/firebase.js"></script>
+<link rel="import" href="../firebase-element/firebase-auth.html">
+<link rel="import" href="../firebase-element/firebase-collection.html">
+<link rel="import" href="../firebase-element/firebase-document.html"> -->
+
+<dom-module id="aws-assignments">
+  <style>
+    :host {
+      @apply(--paper-font-body1);
+      display: block;
+    }
+    /*.nav {
+      border-right: 1px solid #ccc;
+    }
+    .list-panel {
+      background-color: #fafafa;
+    }
+    .list-panel {
+      --paper-header-panel-standard-container: {
+        border-right: 1px solid #ccc;
+      };
+    }*/
+
+
+    .case-list {
+      width: 300px;
+    }
+
+
+    paper-toolbar {
+      background-color: #42A5F5;
+    }
+    .list {
+      padding: 0;
+    }
+    .list paper-item {
+      height: 80px;
+      border-bottom: 1px solid #dedede;
+      background-color: #fafafa;
+    }
+    .main-drawer-panel:not([narrow]) [list-toggle] {
+      display: none;
+    }
+    .graycontainer {
+      border-radius: 5px;
+      margin: 5px;
+      padding: 10px;
+      background-color: gray;
+      color: white;
+    }
+    tr, td, th {
+      padding: 5px;
+      color:#002255;
+    }
+    th {
+      background-color: gray;
+      color: white;
+    }
+    .tdcenter {
+      text-align: center;
+    }
+    tr:nth-child(even) {background: #CCC}
+    tr:nth-child(odd) {background: #ddd}
+    paper-button {
+      background-color: green;
+      color: white;
+      margin:10px;
+    }
+    .max300 {
+      max-height: 300px;
+    }
+    paper-input {
+      background-color: white;
+      max-width:375px;
+      margin: 10px;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .nmbpanel {
+      background-color: #e0e0e0;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 10px;
+      color:black; 
+    }
+    
+    paper-icon-button.orange {
+      color: var(--paper-orange-500);
+    }
+    paper-icon-button.orange:hover {
+      background: var(--paper-orange-50);
+      border-radius: 50%;
+    }
+    .wide200 {
+      width:200px;
+      text-align: right;
+    }
+    .caseitem {
+      padding: 5px;
+    }
+    .caseselected {
+      background-color: gray;
+      color: white;
+    }
+    .smallfont {
+      font-size: .75em;
+    }
+
+    paper-button {
+      background: blue;
+      color: yellow;
+    }
+
+    paper-button:hover {
+      background: lime;
+    }
+
+    paper-button[disabled],
+    paper-button[toggles][active] {
+      background: red;
+    }
+
+    #caselist {
+      width: 300px;
+      height: calc(100vh - 155px);
+      margin-top: 10px;
+    }
+  </style>
+  <template>
+    <firebase-collection
+        location="{{arbcasePath}}"
+        order-value-type="boolean"
+        order-by-child="open"
+        equal-to="true"
+        data="{{arbcases}}">
+    </firebase-collection>
+    <firebase-collection
+        location="{{arbitratorPath}}"
+        data="{{arbitrators}}">
+    </firebase-collection>
+    <firebase-document
+        location="{{_selectedCaseUrl}}"
+        data="{{selectedArbcase}}">
+    </firebase-document>
+    <firebase-document
+        location="{{assignmentPath}}"
+        data="{{selectedAssignment}}">
+    </firebase-document>
+
+    <pick-list4 
+        id="pickArb"
+        item-list="{{arbitrators}}"
+        event-name="arbitrator">
+    </pick-list4>
+
+
+    <div class="flex layout horizontal">
+
+      <div class="case-list">
+        <case-list
+            arbcases="{{arbcases}}">
+        </case-list>
+      </div>
+
+      <div id="details" class="flex">
+        <div class="flex">
+
+          <div class="graycontainer">
+            
+            <h2>
+              Selected Case => <span>{{selectedCaseId}}</span>
+            </h2>
+
+            <div>
+              <paper-button on-tap="_showArb">Arbitrator</paper-button>
+              <span>{{selectedArbitrator.name}}</span>
+              <!-- <paper-icon-button icon="menu" on-tap="togglearbit"></paper-icon-button>
+              <span>{{selectedArbitrator.name}}</span>
+
+              <iron-collapse id="arbitmenu">
+                <template is="dom-repeat" items="{{arbitrators}}" sort="_nameSort">
+                  <div on-tap="_arbitpick">{{item.name}}</div>
+                </template>
+              </iron-collapse> -->
+            </div>
+            <div>
+              Writing Fee: 
+              <paper-radio-group selected="600" id="feeselector">
+                <paper-radio-button name="0">$0</paper-radio-button>
+                <paper-radio-button name="200">$200</paper-radio-button>
+                <paper-radio-button name="400">$400</paper-radio-button>
+                <paper-radio-button name="600">$600</paper-radio-button>
+                <paper-radio-button name="630">$630</paper-radio-button>
+              </paper-radio-group>
+            </div>
+            <br>
+            <div>
+              Hearing Fee: 
+              <paper-radio-group selected="0" id="hfeeselector">
+                <paper-radio-button name="0">$0</paper-radio-button>
+                <paper-radio-button name="30">$30</paper-radio-button>
+              </paper-radio-group>
+            </div>
+            <br>
+           
+            <paper-button id="assignbtn" raised on-tap="assignit">Assign</paper-button>
+            <paper-button id="reassignbtn" raised on-tap="reassignit">RE-Assign</paper-button>
+            <paper-button id="unassignbtn" raised on-tap="unassignit">Unassign</paper-button>
+          </div>  <!-- end of assignment box -->
+
+          <div class="graycontainer">
+            <h3>Assignment Information</h3>
+            <table>
+              <tr>
+                <td>Case </td>
+                <td>{{selectedAssignment.caseID}}</td>
+              </tr>
+              <tr>
+                <td>Arbitrator </td>
+                <td>{{selectedArbcase.arbitrator}}</td>
+              </tr>
+              <tr>
+                <td>Cariier </td>
+                <td>{{selectedAssignment.carrier}}</td>
+              </tr>
+              <tr>
+                <td>Union </td>
+                <td>{{selectedAssignment.union}}</td>
+              </tr>
+              <tr>
+                <td>Assigned </td>
+                <td>{{dateConvert(selectedAssignment.dateAssigned)}}</td>
+              </tr>
+              <tr>
+                <td>Fee </td>
+                <td>{{selectedAssignment.fee}}</td>
+              </tr>
+              <tr>
+                <td>Hearing Fee </td>
+                <td>{{selectedAssignment.hfee}}</td>
+              </tr>
+            </table>
+          </div>
+
+        </div>  <!-- end of right panel -->
+      </div> <!-- end of content -->
+
+    </div>
+
+  </template>
+</dom-module>
+
+  <script>
+    Polymer({
+      is: 'aws-assignments',
+      
+      properties: {
+
+        fireDb: {
+          type: String,
+          value: ""
+        },
+        
+        
+        arbcases: {
+          type: Array,
+          value: function() {
+            return [];
+          }
+        },
+        _selectedCaseUrl: {
+          type: String,
+          value: "https://nmbdev.firebaseIO.com/arbcases/ABC-00001-000030"
+        },
+
+        selectedCaseId: String,
+        selectedArbcase: {
+          type:Object,
+          value: function () {
+            return {};
+          },
+          observer: '_arbcaseChanged'
+        },
+            
+        arbitrators: {
+          type: Array,
+          value: function() {
+            return [];
+          }
+        },
+
+        // arbitselection: {
+        //   type: Number,
+        //   observer: '_arbitselectionChged'
+        // },
+        selectedArbitrator: Object,
+        
+
+        selectedAssignment: {
+          type:Object
+        },
+        assignmentPath: String
+        
+      },
+        
+      ready: function () {
+        this.arbitratorPath = this.fireDb + "/users";
+        this.arbcasePath = this.fireDb + "/arbcases";
+        this.addEventListener('case-selected', function(event) {
+          this.selectedCaseId = event.detail.caseId;
+          this._selectedCaseUrl = this.arbcasePath + "/" + event.detail.caseId;
+        });
+        this.addEventListener('selected-arbitrator', function (e) {
+          // alert("catching selected-arbitrator");
+          this.selectedArbitrator = event.detail;
+        });
+      },
+    
+      // togglearbit: function () {
+      //   this.$.arbitmenu.toggle();
+      // },
+
+      // _arbitpick: function(event) {
+      //   alert(event.model.item.name);
+      //   this.selectedArbitrator = event.model.item;
+      // },
+      
+      // _arbitselectionChged: function(newIndex, oldIndex) {
+      //   console.log("in _arbitselectionChged");
+      //   if (typeof newIndex === 'number') {
+      //     this.selectedArbitrator = this.arbitrators[newIndex];
+      //     console.log("new Arbit " + this.selectedArbitrator.__firebaseKey__);
+      //     this.$.arbitmenu.toggle();
+      //   }
+      // },
+      // this._selectedCaseUrl = this.arbcasePath + "/" + caseId
+
+      _arbcaseChanged: function() { 
+        if (this.selectedArbcase.assigned) {
+          this.$.assignbtn.setAttribute('disabled', true);
+          this.$.reassignbtn.removeAttribute('disabled');
+          this.$.unassignbtn.removeAttribute('disabled');
+        } else {
+          this.$.assignbtn.removeAttribute('disabled');
+          this.$.reassignbtn.setAttribute('disabled', true);
+          this.$.unassignbtn.setAttribute('disabled', true);
+        }
+        this.assignmentPath = this.fireDb + "/users/" + this.selectedArbcase.arbuid + "/assignments/" + this.selectedCaseId;
+      },
+
+// widget functions
+      dateConvert: function (stringint) {
+       if (stringint != "" && stringint != null){
+         var d = new Date(parseInt(stringint));
+         return d.toLocaleDateString();
+       } else {
+         return "n/a";
+       }
+      },
+      dateConvert2: function (stringint) {
+       if (stringint != "" && stringint != null){
+         var d = new Date(parseInt(stringint));
+         var mydate = d.getDate().toString();
+         if (mydate.length < 2) {
+          mydate = "0" + mydate;
+         } 
+         var mymonth = d.getMonth() +1;
+         var mymonthstr = mymonth.toString();
+         if (mymonthstr.length < 2) {
+          mymonthstr = "0" + mymonthstr;
+         }
+         var mydateStr = "" + d.getFullYear() + "-" + mymonthstr + "-" + mydate;
+         return mydateStr;
+       } else {
+         return "n/a";
+       }
+      },
+      togglearbit: function () {
+        console.log("in togglearbit");
+        this.$.arbitmenu.toggle();
+      },
+      assignit: function () {
+        if (!this.selectedArbitrator) {
+          alert("you need to select an arbitrator");
+          return;
+        }
+        if (!this.selectedArbcase) {
+          alert("you need to select a case");
+          return;
+        }
+        var nowDate = new Date();
+        var yodate = nowDate.getTime().toString();
+        var dateLWroundedDate = new Date(nowDate.getFullYear(), (nowDate.getMonth() + 3));
+        var tempdate = dateLWroundedDate.getTime() - 1000;
+        var dateLWroundedStr = tempdate.toString()
+
+        var cAbbr = this.selectedArbcase.carrierAbbr;
+
+        var cName = this.selectedArbcase.carrier;
+
+        var uAbbr = this.selectedArbcase.unionAbbr;
+
+        var uName = this.selectedArbcase.union;
+
+        var paramStr = {
+          "arbuid": this.selectedArbitrator.__firebaseKey__,
+          "arbitrator": this.selectedArbitrator.name,
+          "origarbuid": this.selectedArbitrator.__firebaseKey__,
+          "origarbitrator": this.selectedArbitrator.name,
+          "dateAssigned": yodate,
+          "origdateAssigned": yodate,
+          "fee": this.$.feeselector.selected,
+          "hfee": this.$.hfeeselector.selected,
+          "assigned": true
+        };
+        var caseaddress = this.fireDb + "/arbcases/" + this.selectedCaseId;
+        var caseRef = new Firebase(caseaddress);
+        caseRef.update(paramStr);
+
+
+        
+        var assignParam = {
+          "caseID": this.selectedCaseId,
+          "arbuid": this.selectedArbitrator.__firebaseKey__,
+          "open": true,
+          "carrierAbbr": cAbbr,
+          "unionAbbr": uAbbr,
+          "carrier": cName,
+          "union": uName,
+          "dateAssigned": yodate,
+          "fee": this.$.feeselector.selected,
+          "hfee": this.$.hfeeselector.selected,
+          "LW": dateLWroundedStr,
+          "LH": dateLWroundedStr,
+          "subject": this.selectedArbcase.subject
+        }
+        var assignaddress = this.fireDb + "/users/" + this.selectedArbitrator.__firebaseKey__ + "/assignments/" + this.selectedCaseId;
+        var assignRef = new Firebase(assignaddress);
+        assignRef.set(assignParam);
+
+        alert("successfully assigned " + this.selectedCaseId + 
+            "to" + this.selectedArbitrator.name);
+        this.$.assignbtn.setAttribute('disabled',true);
+        this.$.unassignbtn.removeAttribute('disabled');
+        this.$.reassignbtn.removeAttribute('disabled');
+      },
+
+      reassignit: function () {
+        if (!this.selectedArbitrator) {
+          alert("you need to select an arbitrator");
+          return;
+        }
+        if (!this.selectedArbcase) {
+          alert("you need to select a case");
+          return;
+        }
+        var nowDate = new Date();
+        var yodate = nowDate.getTime().toString();
+        var dateLWroundedDate = new Date(nowDate.getFullYear(), (nowDate.getMonth() + 3));
+        var tempdate = dateLWroundedDate.getTime() - 1000;
+        var dateLWroundedStr = tempdate.toString()
+
+        var cAbbr = this.selectedArbcase.carrierAbbr;
+
+        var cName = this.selectedArbcase.carrier;
+
+        var uAbbr = this.selectedArbcase.unionAbbr;
+
+        var uName = this.selectedArbcase.union;
+
+        var paramStr = {
+          "arbuid": this.selectedArbitrator.__firebaseKey__,
+          "arbitrator": this.selectedArbitrator.name,
+          "dateAssigned": yodate,
+          "assigned": true
+        };
+        var caseaddress = this.fireDb + "/arbcases/" + this.selectedCaseId;
+
+        var reassignParam = {
+          "open": null,
+          "dateClosed": yodate
+        }
+        var reassignaddress = this.fireDb + "/users/" + this.selectedArbcase.arbuid + "/assignments/" + this.selectedCaseId;
+
+        var assignParam = {
+          "caseID": this.selectedCaseId,
+          "arbuid": this.selectedArbitrator.__firebaseKey__,
+          "open": true,
+          "carrierAbbr": cAbbr,
+          "unionAbbr": uAbbr,
+          "carrier": cName,
+          "union": uName,
+          "dateAssigned": yodate,
+          "fee": this.$.feeselector.selected,
+          "hfee": this.$.hfeeselector.selected,
+          "LW": dateLWroundedStr,
+          "LH": dateLWroundedStr,
+          "subject": this.selectedArbcase.subject
+        }
+        var assignaddress = this.fireDb + "/users/" + this.selectedArbitrator.__firebaseKey__ + "/assignments/" + this.selectedCaseId;
+
+        var caseRef = new Firebase(caseaddress);
+        caseRef.update(paramStr);
+        var reassignRef = new Firebase(reassignaddress);
+        reassignRef.update(reassignParam);
+        var assignRef = new Firebase(assignaddress);
+        assignRef.set(assignParam);
+
+        alert("successfully re-assigned " + this.selectedCaseId + 
+            "to" + this.selectedArbitrator.name);
+        
+        this.$.assignbtn.setAttribute('disabled',true);
+        this.$.unassignbtn.removeAttribute('disabled');
+        this.$.reassignbtn.removeAttribute('disabled');
+      },
+      
+      unassignit: function () {
+
+        if (this.selectedArbcase.written || this.selectedArbcase.heard) {
+          alert("this case has been reported as heard or written, please contact Charlie.")
+          return;
+        }
+
+        var nowDate = new Date();
+        var yodate = nowDate.getTime().toString();
+        
+        var paramStr = {
+          "arbuid": "",
+          "arbitrator": "unassigned",
+          "dateAssigned": yodate,
+          "assigned": false
+        };
+        var caseaddress = this.fireDb + "/arbcases/" + this.selectedCaseId;
+        
+          
+        var assignParam = {
+          "open": null,
+          "dateClosed": yodate
+        }
+        var assignaddress = this.fireDb + "/users/" + this.selectedArbcase.arbuid + "/assignments/" + this.selectedCaseId;
+        var caseRef = new Firebase(caseaddress);
+        caseRef.update(paramStr); 
+        var assignRef = new Firebase(assignaddress);
+        assignRef.update(assignParam);
+        this.$.unassignbtn.setAttribute('disabled',true);
+        this.$.assignbtn.removeAttribute('disabled');
+        this.$.reassignbtn.setAttribute('disabled',true);
+        alert("unassigned case " + this.selectedCaseId);
+
+      },
+
+      _showArb: function () {
+        this.$.pickArb.listShow();
+      }
+      // _nameSort: function (a,b) {
+      //   if (a.name.toLowerCase() < b.name.toLowerCase()) {
+      //     return -1;
+      //   }
+      //   if (a.name.toLowerCase() > b.name.toLowerCase()) {
+      //     return 1;
+      //   }
+      //   return 0;
+      // }
+
+    });
+  </script>

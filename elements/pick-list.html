@@ -1,0 +1,126 @@
+<!--
+@license
+Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="pick-list">
+
+<style>
+	:host {	}
+
+	
+
+</style>
+<template>
+
+
+	<paper-dialog id="listDialog" modal>
+	  <h2>{{eventName}} picklist</h2>
+	  <paper-dialog-scrollable>
+	    
+	    <paper-input id="filtertext" on-change="_rerender" label="search:"></paper-input>
+
+	  	<template is="dom-repeat" id="actuallist" items="{{itemList}}" filter="_listFilter">
+
+			<div on-tap="_selectAnItem">{{_itemDisplay(item)}}</div>
+
+		</template>
+
+
+	  </paper-dialog-scrollable>
+	  <div class="buttons">
+	    <paper-button on-tap="_clear" dialog-dismiss>Cancel</paper-button>
+	  </div>
+	</paper-dialog>
+
+</template>
+
+</dom-module>
+
+<script>
+
+	Polymer({
+		is: 'pick-list',
+
+		properties: {
+
+			itemList: {
+				type: Array,
+				value: function () {
+					return [];
+				}
+			},
+
+
+			eventName: {
+				type: String,
+				value: "default"
+			}
+
+		},
+
+		listShow: function () {
+			this.$.listDialog.open();
+		},
+
+		_selectAnItem: function (event) {
+			var evntnme = "selected-" + this.eventName;
+			this.fire(evntnme, event.model.item);
+			this.$.listDialog.close();
+			this.$.filtertext.value = "";
+			this.$.actuallist.render();
+		},
+
+		_rerender: function () {
+			this.$.actuallist.render();
+		},
+
+		_listFilter: function (item) {
+			if (item.hasOwnProperty('pickname')) {
+				var test = item.pickname.toLowerCase()
+				return test.startsWith(this.$.filtertext.value.toLowerCase());
+			}
+			if (item.hasOwnProperty('name')) {
+				var test = item.name.toLowerCase()
+				return test.startsWith(this.$.filtertext.value.toLowerCase());
+			}
+			if (item.hasOwnProperty('__firebaseKey__')) {
+				var test = item.__firebaseKey__.toLowerCase()
+				return test.startsWith(this.$.filtertext.value.toLowerCase());
+			}
+			return false;
+		},
+
+		_itemDisplay: function (item) {
+			if (item.hasOwnProperty('pickname')) {
+				return item.pickname;
+			}
+			if (item.hasOwnProperty('name')) {
+				return item.name;
+			}
+			if (item.hasOwnProperty('__firebaseKey__')) {
+				return item.__firebaseKey__;
+			}
+			return "no display";
+		},
+
+		_clear: function () {
+			this.$.filtertext.value = "";
+			this.$.actuallist.render();
+		},
+
+		
+
+		_dateConvert: function (stringint) {
+			if (stringint != "" && stringint != null){
+				var d = new Date(parseInt(stringint));
+				return d.toLocaleDateString();
+			} else {
+				return "n/a";
+			}
+		}
+
+	});
+
+
+</script>

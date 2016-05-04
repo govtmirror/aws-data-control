@@ -1,0 +1,262 @@
+<!--
+@license
+Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
+-->
+
+<dom-module id="board-list">
+
+<style>
+
+  :host {
+    height: 85vh;
+    @apply(--paper-font-body1);
+  }
+
+	.flex-horizontal {
+      @apply(--layout-horizontal);
+      @apply(--layout-center);
+    }
+    .flexchild {
+      @apply(--layout-flex);
+    }
+    .boarditem {
+      border-radius: 10px;
+      padding: 10px;
+      margin:5px;
+      background-color: white;
+      color: black;
+    }
+    .boardselected {
+      background-color: var(--paper-pink-a200);
+      color: white;
+    }
+   
+
+    .listhead {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background-color: #eee;
+    }
+
+    paper-scroll-header-panel {
+      height: 100%;
+    }
+
+</style>
+<template>
+<paper-scroll-header-panel>
+	<!-- <div class="listhead"> -->
+  <div class="listhead">
+    <div class="flex-horizontal">
+      <paper-icon-button
+          icon="{{_toggleState}}"
+          on-tap="_doSearchToggle">
+      </paper-icon-button>
+      <div class="flexchild">Search Form</div>
+    </div>
+    <iron-collapse id="searchform">
+      <hr>
+      <paper-radio-button 
+          checked
+          id="getOpen" >
+        Open
+      </paper-radio-button>
+      <paper-radio-button 
+          id="getClosed">
+        Closed
+      </paper-radio-button>
+      <paper-input 
+          id="boardtest"
+          label="Board number:" >
+      </paper-input>
+      <paper-input 
+          id="carriertest"
+          label="Carrier:">
+      </paper-input>
+      <paper-input 
+          id="orgtest"
+          label="Organization:">
+      </paper-input>
+      <div class="flex-horizontal">
+        <div class="flexchild"></div>
+        <paper-icon-button
+            icon="search"
+            on-tap="_doListSort">
+        </paper-icon-button>
+        <paper-icon-button
+            icon="clear"
+            on-tap="_doClearList">
+        </paper-icon-button>
+      </div>
+    </iron-collapse>
+  </div>
+ 
+  <!-- <div id="actualList" class="fit" hidden$="{{_hideActualList}}"> -->
+  <div id="actualList">
+    <template is="dom-repeat" 
+        id="boardlist"
+        items="{{boards}}"
+        filter="isDisplay"
+        >
+      <div on-tap="_itemtap" class="boarditem">
+
+      	<p>{{item.__firebaseKey__}}</p>
+
+            <!-- {{item.caseID}} {{item.caseSuffix}}, {{dateConvert(item.docketDate)}},<br>&nbsp;&nbsp;
+            
+            <template is="dom-repeat" items="{{item.carriers}}" as="piss">
+              {{piss}},&nbsp;
+            </template>
+          
+          
+            <template is="dom-repeat" items="{{item.orgs}}" as="shit">
+              {{shit}},<br>&nbsp;&nbsp;
+            </template>
+          
+
+            <template is="dom-repeat" items="{{item.nmbMembers}}" as="poop">
+              {{poop.name}},&nbsp;
+            </template> -->
+      </div>
+        
+    </template>
+  </div>
+ </paper-scroll-header-panel>
+
+</template>
+
+</dom-module>
+
+<script>
+
+	Polymer({
+		is: 'board-list',
+
+		properties: {
+
+			boards: {
+				type: Array,
+				value: function () {
+					return [];
+				}
+			},
+
+			_toggleState: {
+				type: String,
+				value: "arrow-downward"
+			},
+
+			selectedBoard: {
+				type: Object,
+				value: function () {
+					return {};
+				}
+			},
+
+			selectedBoardid: {
+				type: String,
+				value: null
+			}
+
+		},
+
+		_doSearchToggle: function () {
+			this.$.searchform.toggle();
+			if (this.$.searchform.opened) {
+				this._toggleState = "arrow-upward"
+			} else {
+				this._toggleState = "arrow-downward"
+			}
+		},
+
+    _doListSort: function () {
+      // zalert("in list sort " + this.$.boardtest.value);
+      this.$.boardlist.render();
+    },
+    _doClearList: function () {
+      this.$.getOpen.checked = false;
+      this.$.getClosed.checked = false;
+      this.$.boardtest.value = "";
+      this.$.carriertest.value = "";
+      this.$.orgtest.value = "";
+      // alert("_doClearList");
+    },
+    isDisplay: function (item) {
+      return this._getState(item) && 
+             this._boardStartsWith(item) &&
+             this._carrierStartsWith(item) &&
+             this._orgStartsWith(item);
+
+    },
+    _getState: function (item) {
+      var o = this.$.getOpen.checked;
+      var c = this.$.getClosed.checked;
+      var closed = false;
+      if (item.closeDate != "") {
+        closed = true;
+      }
+      if (closed && c) { return true;} 
+      if (!closed && o) { return true;}
+      return false;
+    },
+    _boardStartsWith: function (item) {
+      var teststring = this.$.boardtest.value;
+      if (teststring) {
+        return item.__firebaseKey__.startsWith(teststring);
+      } else {
+        return true;
+      }  
+    },
+    _carrierStartsWith: function (item) {
+      var teststring = this.$.carriertest.value;
+      if (teststring) {
+        return item.carrier.startsWith(teststring);
+      } else {
+        return true;
+      }  
+    },
+    _orgStartsWith: function (item) {
+      var teststring = this.$.orgtest.value;
+      if (teststring) {
+        return item.union.startsWith(teststring);
+      } else {
+        return true;
+      }  
+    },
+
+
+		_itemtap: function (event) {
+	        // remove boardselected class from all elements
+	        try {
+	          this.toggleClass('boardselected', false, this.$$('.boardselected'));
+	        } 
+	        catch(err) {
+	          console.log("no boardselected");
+	        }
+	        //  make the comparison to existing selected case
+	        var boardid = event.model.item.__firebaseKey__;
+	        var isNewBoard = true;
+	        if (this.selectedBoard != null && boardid == this.selectedBoardid ) {
+	          isNewBoard = false;
+	        }
+	      
+	        // console.log("in item-tap = " + isNewBoard + " and " + boardid + " and " + this.selectedBoardid );
+	        //  set or not the case selected class
+	        if (event.target.nodeName != "DIV") {
+	          this.toggleClass('boardselected', isNewBoard, event.target.parentNode);
+	        } else {
+	          this.toggleClass('boardselected', isNewBoard, event.target);
+	        }
+	        
+	        this.fire('board-selected', {
+	          "boardId": event.model.item.__firebaseKey__,
+	          "isNewBoard": isNewBoard
+	        });
+	      },
+
+
+	});
+
+
+</script>

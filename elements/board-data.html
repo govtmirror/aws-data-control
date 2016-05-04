@@ -131,7 +131,7 @@ Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
 			ref.once("value", function (data) {
 				if (data.val() == null) {
 					ref.set(bdmsg, function () {
-						alert("back from creating new board.");
+						alert("created board");
 					});
 				} else {
 					alert("already have a board by that number.");

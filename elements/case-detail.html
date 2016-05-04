@@ -242,6 +242,7 @@ Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
       var tempDateInt = tempDate.getTime() + (12 * 3600 * 1000);
       var tempDateStr = tempDateInt.toString();
       this.fire('case-edit', {'cSub': tempDateStr});
+      this.$.cSubInput.value = "";
     } else {
       alert("please select a Case.")
     }
@@ -253,6 +254,7 @@ Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
       var tempDateInt = tempDate.getTime() + (12 * 3600 * 1000);
       var tempDateStr = tempDateInt.toString();
       this.fire('case-edit', {'uSub': tempDateStr});
+      this.$.uSubInput.value = "";
     } else {
       alert("please select a Case.")
     }

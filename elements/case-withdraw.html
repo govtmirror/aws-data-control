@@ -86,12 +86,12 @@ Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
 
   properties: {
 
-    // selectedCase: {
-    //   type: Object,
-    //   value: function () {
-    //     return {};
-    //   }
-    // },
+    selectedCase: {
+      type: Object,
+      value: function () {
+        return {};
+      }
+    },
     selectedCaseId: String,
     userName: String
 
@@ -119,6 +119,10 @@ Copyright (c) 2015 dean wagner wagner@nmb.gov. All rights reserved.
   _withdrawIt: function() {
     if (!this.$.withdrawDate.value) {
       alert("you must enter a date");
+      return;
+    }
+    if (!this.selectedCase.open || this.selectedCase.assigned) {
+      alert("This case is either not open or it is assigned.  You cannot withdraw it.");
       return;
     }
     var tempDate = new Date(this.$.withdrawDate.value);

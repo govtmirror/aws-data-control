@@ -81,6 +81,8 @@ Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
 		},
 
 		_listFilter: function (z) {
+			if (!z.arbitrator) {return false;}
+
 			var standard = this.$.filtertext.value.toLowerCase();
 
 			var aArray = z.name.split(" ");

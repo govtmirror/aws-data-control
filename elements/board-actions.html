@@ -46,6 +46,8 @@ Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
 		<div>{{selectedBoard.carrier}}</div>
 		<div>{{selectedBoard.union}}</div>
 
+		<div>{{_payStatusMsg}}</div>
+
 		<div>Open Date = {{_dateConvert(selectedBoard.openDate)}}</div>
 		<div>Close Date = {{_dateConvert(selectedBoard.closeDate)}}</div>
 
@@ -82,7 +84,8 @@ Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
 					return {};
 				}
 			},
-			selectedBoardid: String
+			selectedBoardid: String,
+			_payStatusMsg: String
 
 		},
 
@@ -113,11 +116,15 @@ Copyright (c) 2016 dean wagner wagner@nmb.gov. All rights reserved.
 
 		_ppClass: function (pp) {
 			if (pp) {
+				this._payStatusMsg = "Party Pays";
 				return "grn";
 			} else {
+				this._payStatusMsg = "NMB Pays";
 				return "rd";
 			}
 		},
+
+
 
 		_dateConvert: function (stringint) {
 			if (stringint != "" && stringint != null){
